@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, Button } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import Link from '@mui/material/Link';
 
 const Main: React.FC = () => {
