@@ -1,35 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { marked } from "marked";
 import {
-  Paper,
-  InputBase,
-  IconButton,
-  Divider,
-  Box,
   Autocomplete,
   TextField,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
 
 const BlogSearch: React.FC = () => {
   const [posts, setPosts] = useState<string[]>([]);
-  const [filteredPosts, setFilteredPosts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedPost, setSelectedPost] = useState<string>("");
   const [postContent, setPostContent] = useState<string>("");
-  const [menuClicked, setMenuClicked] = useState<boolean>(false);
 
   useEffect(() => {
     fetch("/posts/posts.json")
       .then((response) => response.json())
       .then((data) => {
         setPosts(data);
-        if (menuClicked) {
-          setFilteredPosts(data);
-        }
       })
       .catch((error) => console.error("Error fetching posts:", error));
-  }, [menuClicked]);
+  }, []);
 
   useEffect(() => {
     if (selectedPost) {
@@ -46,15 +35,9 @@ const BlogSearch: React.FC = () => {
   ) => {
     if (value) {
       setSearchTerm(value);
-      const filtered = posts.filter((post) =>
-        post.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredPosts(filtered);
     } else {
       setSearchTerm("");
-      setFilteredPosts([]);
     }
-    setMenuClicked(false);
   };
 
   const handlePostSelect = (
@@ -65,19 +48,6 @@ const BlogSearch: React.FC = () => {
       setSelectedPost(value + ".md");
       setSearchTerm(value);
     }
-  };
-
-  const handleMenuClick = () => {
-    setMenuClicked(!menuClicked);
-    if (!menuClicked) {
-      setFilteredPosts(posts);
-    } else {
-      handleSearchChange({} as React.ChangeEvent<{}>, searchTerm);
-    }
-  };
-
-  const getHeaderMessage = () => {
-    return menuClicked ? "All Posts" : "Search Matches";
   };
 
   return (
