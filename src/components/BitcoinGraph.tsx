@@ -178,7 +178,7 @@ const BitcoinGraph: React.FC<BitcoinGraphProps> = ({ dataFile, title }) => {
         }}
       >
         <SigmaContainer
-          style={{ height: "100%", width: "100%" }}
+          style={{ height: "100%", width: "100%", backgroundColor: "#000" }}
           settings={{
             renderEdgeLabels: false,
             defaultEdgeType: "line",
