@@ -9,6 +9,53 @@ import {
 import "@react-sigma/core/lib/react-sigma.min.css";
 import { Box, CircularProgress } from "@mui/material";
 
+// Custom hover renderer: draws black text on white background instead of white-on-white
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const customDrawNodeHover = (context: CanvasRenderingContext2D, data: any, settings: any) => {
+  const size = settings.labelSize;
+  const font = settings.labelFont;
+  const weight = settings.labelWeight;
+  context.font = `${weight} ${size}px ${font}`;
+
+  context.fillStyle = "#FFF";
+  context.shadowOffsetX = 0;
+  context.shadowOffsetY = 0;
+  context.shadowBlur = 8;
+  context.shadowColor = "#000";
+
+  const PADDING = 2;
+  if (typeof data.label === "string") {
+    const textWidth = context.measureText(data.label).width;
+    const boxWidth = Math.round(textWidth + 5);
+    const boxHeight = Math.round(size + 2 * PADDING);
+    const radius = Math.max(data.size, size / 2) + PADDING;
+    const angleRadian = Math.asin(boxHeight / 2 / radius);
+    const xDeltaCoord = Math.sqrt(Math.abs(radius ** 2 - (boxHeight / 2) ** 2));
+    context.beginPath();
+    context.moveTo(data.x + xDeltaCoord, data.y + boxHeight / 2);
+    context.lineTo(data.x + radius + boxWidth, data.y + boxHeight / 2);
+    context.lineTo(data.x + radius + boxWidth, data.y - boxHeight / 2);
+    context.lineTo(data.x + xDeltaCoord, data.y - boxHeight / 2);
+    context.arc(data.x, data.y, radius, angleRadian, -angleRadian);
+    context.closePath();
+    context.fill();
+  } else {
+    context.beginPath();
+    context.arc(data.x, data.y, data.size + PADDING, 0, Math.PI * 2);
+    context.closePath();
+    context.fill();
+  }
+
+  context.shadowBlur = 0;
+
+  // Draw label with black text
+  if (data.label) {
+    context.fillStyle = "#000";
+    context.font = `${weight} ${size}px ${font}`;
+    context.fillText(data.label, data.x + data.size + 3, data.y + size / 3);
+  }
+};
+
 interface GraphNode {
   id: string;
   label: string;
@@ -141,6 +188,7 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ onSelectPost }) => {
           labelFont: "Courier, monospace",
           labelSize: 14,
           labelColor: { color: "#fff" },
+          defaultDrawNodeHover: customDrawNodeHover,
         }}
       >
         <LoadGraph data={data} />
