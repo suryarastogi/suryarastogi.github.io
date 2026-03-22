@@ -3,6 +3,7 @@ import { createRoot, Root } from "react-dom/client";
 import { marked } from "marked";
 import { Autocomplete, TextField } from "@mui/material";
 import BitcoinGraph from "./BitcoinGraph";
+import NetworkGraph from "./NetworkGraph";
 
 // Convert [[wiki-links]] to clickable anchor tags
 function resolveWikiLinks(html: string): string {
@@ -111,8 +112,14 @@ const BlogSearch: React.FC = () => {
     }
   };
 
+  const handleNetworkClick = useCallback((postName: string) => {
+    setSelectedPost(postName + ".md");
+    setSearchTerm(postName);
+  }, []);
+
   return (
     <div>
+      <NetworkGraph onSelectPost={handleNetworkClick} />
       <Autocomplete
         freeSolo
         options={posts.map((post) => post.replace(".md", ""))}
