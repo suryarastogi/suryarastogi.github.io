@@ -31,7 +31,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "generate-network": "node scripts/generate-network.js",
+    "build": "npm run generate-network && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

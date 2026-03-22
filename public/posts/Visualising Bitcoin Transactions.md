@@ -48,3 +48,5 @@ By focusing on this area and expanding the network graph, the two subgraphs beco
 ## Final Thoughts
 
 These visualizations allow thousands of transactions to be analyzed at a glance. They can provide insights into how services on the Bitcoin blockchain manage and use their Bitcoin addresses.
+
+For a deeper look at how Ethereum handles transactions differently from Bitcoin, see [[Traces Not Transactions]].

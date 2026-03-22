@@ -4,6 +4,14 @@ import { marked } from "marked";
 import { Autocomplete, TextField } from "@mui/material";
 import BitcoinGraph from "./BitcoinGraph";
 
+// Convert [[wiki-links]] to clickable anchor tags
+function resolveWikiLinks(html: string): string {
+  return html.replace(
+    /\[\[([^\]]+)\]\]/g,
+    '<a href="#" class="wiki-link" data-post="$1">$1</a>'
+  );
+}
+
 const BlogSearch: React.FC = () => {
   const [posts, setPosts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -25,10 +33,19 @@ const BlogSearch: React.FC = () => {
     if (selectedPost) {
       fetch(`/posts/${selectedPost}`)
         .then((response) => response.text())
-        .then((markdown) => setPostContent(marked.parse(markdown) as string))
+        .then((markdown) => {
+          const html = marked.parse(markdown) as string;
+          setPostContent(resolveWikiLinks(html));
+        })
         .catch((error) => console.error("Error fetching post content:", error));
     }
   }, [selectedPost]);
+
+  const navigateToPost = useCallback((postName: string) => {
+    setSelectedPost(postName + ".md");
+    setSearchTerm(postName);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const mountVizComponents = useCallback(() => {
     if (!contentRef.current) return;
@@ -37,6 +54,7 @@ const BlogSearch: React.FC = () => {
     vizRootsRef.current.forEach((root) => root.unmount());
     vizRootsRef.current = [];
 
+    // Mount graph visualizations
     const vizDivs = contentRef.current.querySelectorAll<HTMLElement>(
       "[data-viz]"
     );
@@ -50,7 +68,19 @@ const BlogSearch: React.FC = () => {
         vizRootsRef.current.push(root);
       }
     });
-  }, []);
+
+    // Attach click handlers to wiki-links
+    const wikiLinks = contentRef.current.querySelectorAll<HTMLAnchorElement>(
+      ".wiki-link"
+    );
+    wikiLinks.forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const postName = link.getAttribute("data-post");
+        if (postName) navigateToPost(postName);
+      });
+    });
+  }, [navigateToPost]);
 
   useEffect(() => {
     mountVizComponents();

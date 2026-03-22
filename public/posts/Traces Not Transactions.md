@@ -18,3 +18,5 @@ By using the three main *trace* types (call, create, suicide), we can generalise
 
 ## Final Thoughts
 I therefore believe that block explorers and other Ethereum analysers should adopt the convention of the *trace* data type instead of “internal transactions”.
+
+For a visual analysis of Bitcoin's simpler transaction model, see [[Visualising Bitcoin Transactions]].
