@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Graph from "graphology";
 import {
   SigmaContainer,
@@ -7,7 +7,7 @@ import {
   useSigma,
 } from "@react-sigma/core";
 import "@react-sigma/core/lib/react-sigma.min.css";
-import { Typography, Box, CircularProgress } from "@mui/material";
+import { Typography, Box, CircularProgress, Button } from "@mui/material";
 
 interface GraphNode {
   id: string;
@@ -129,9 +129,32 @@ interface BitcoinGraphProps {
 const BitcoinGraph: React.FC<BitcoinGraphProps> = ({ dataFile, title }) => {
   const [data, setData] = useState<GraphData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [activated, setActivated] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Only mount sigma when the element is in the viewport
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setVisible(entry.isIntersecting);
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Fetch data when first visible
+  useEffect(() => {
+    if (!visible || data || loading) return;
+
+    setLoading(true);
     fetch(`/data/bitcoin/${dataFile}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load ${dataFile}`);
@@ -145,24 +168,16 @@ const BitcoinGraph: React.FC<BitcoinGraphProps> = ({ dataFile, title }) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [dataFile]);
-
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-        <CircularProgress size={24} />
-      </Box>
-    );
-  }
+  }, [visible, data, loading, dataFile]);
 
   if (error) {
     return <Typography color="error">Error loading graph: {error}</Typography>;
   }
 
-  if (!data) return null;
+  const showGraph = visible && activated && data;
 
   return (
-    <Box sx={{ my: 3 }}>
+    <Box sx={{ my: 3 }} ref={containerRef}>
       {title && (
         <Typography variant="subtitle2" sx={{ mb: 1, fontStyle: "italic" }}>
           {title}
@@ -175,26 +190,51 @@ const BitcoinGraph: React.FC<BitcoinGraphProps> = ({ dataFile, title }) => {
           borderRadius: 1,
           overflow: "hidden",
           position: "relative",
+          backgroundColor: "#000",
         }}
       >
-        <SigmaContainer
-          style={{ height: "100%", width: "100%", backgroundColor: "#000" }}
-          settings={{
-            renderEdgeLabels: false,
-            defaultEdgeType: "line",
-            labelRenderedSizeThreshold: 12,
-            labelFont: "Courier, monospace",
-            labelColor: { color: "#fff" },
-          }}
-        >
-          <LoadGraph data={data} />
-          <HoverLabel />
-        </SigmaContainer>
+        {loading && (
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+            <CircularProgress size={24} />
+          </Box>
+        )}
+        {data && !activated && (
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", flexDirection: "column", gap: 1 }}>
+            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+              {data.nodes.length} nodes, {data.edges.length} edges
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setActivated(true)}
+              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.3)" }}
+            >
+              Load Graph
+            </Button>
+          </Box>
+        )}
+        {showGraph && (
+          <SigmaContainer
+            style={{ height: "100%", width: "100%", backgroundColor: "#000" }}
+            settings={{
+              renderEdgeLabels: false,
+              defaultEdgeType: "line",
+              labelRenderedSizeThreshold: 12,
+              labelFont: "Courier, monospace",
+              labelColor: { color: "#fff" },
+            }}
+          >
+            <LoadGraph data={data} />
+            <HoverLabel />
+          </SigmaContainer>
+        )}
       </Box>
-      <Typography variant="caption" sx={{ mt: 0.5, display: "block", opacity: 0.6 }}>
-        {data.nodes.length} nodes, {data.edges.length} edges — scroll to zoom,
-        drag to pan, hover for details
-      </Typography>
+      {data && activated && (
+        <Typography variant="caption" sx={{ mt: 0.5, display: "block", opacity: 0.6 }}>
+          {data.nodes.length} nodes, {data.edges.length} edges — scroll to zoom,
+          drag to pan, hover for details
+        </Typography>
+      )}
     </Box>
   );
 };
