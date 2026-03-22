@@ -45,8 +45,6 @@ The FBI seized around 144,000 bitcoin from Silk Road hot wallets. The seizure oc
 
 By focusing on this area and expanding the network graph, the two subgraphs become connected meaning that someone was at the time tumbling bitcoin and directly depositing it in a wallet that would soon be seized.
 
-<div data-viz="FBIAddress.json" data-title="Expanded view — tumbler connected to seized Silk Road wallets"></div>
-
 ## Final Thoughts
 
 These visualizations allow thousands of transactions to be analyzed at a glance. They can provide insights into how services on the Bitcoin blockchain manage and use their Bitcoin addresses.
