@@ -6,7 +6,7 @@ import {
   useRegisterEvents,
   useSigma,
 } from "@react-sigma/core";
-import "@react-sigma/core/lib/css/sigma.min.css";
+import "@react-sigma/core/lib/react-sigma.min.css";
 import { Typography, Box, CircularProgress } from "@mui/material";
 
 interface GraphNode {
