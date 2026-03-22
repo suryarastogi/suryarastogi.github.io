@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createRoot, Root } from "react-dom/client";
 import { marked } from "marked";
-import {
-  Autocomplete,
-  TextField,
-} from "@mui/material";
+import { Autocomplete, TextField } from "@mui/material";
+import BitcoinGraph from "./BitcoinGraph";
 
 const BlogSearch: React.FC = () => {
   const [posts, setPosts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedPost, setSelectedPost] = useState<string>("");
   const [postContent, setPostContent] = useState<string>("");
+  const contentRef = useRef<HTMLDivElement>(null);
+  const vizRootsRef = useRef<Root[]>([]);
 
   useEffect(() => {
     fetch("/posts/posts.json")
@@ -24,10 +25,40 @@ const BlogSearch: React.FC = () => {
     if (selectedPost) {
       fetch(`/posts/${selectedPost}`)
         .then((response) => response.text())
-        .then((markdown) => setPostContent(marked.parse(markdown)))
+        .then((markdown) => setPostContent(marked.parse(markdown) as string))
         .catch((error) => console.error("Error fetching post content:", error));
     }
   }, [selectedPost]);
+
+  const mountVizComponents = useCallback(() => {
+    if (!contentRef.current) return;
+
+    // Cleanup previous roots
+    vizRootsRef.current.forEach((root) => root.unmount());
+    vizRootsRef.current = [];
+
+    const vizDivs = contentRef.current.querySelectorAll<HTMLElement>(
+      "[data-viz]"
+    );
+
+    vizDivs.forEach((div) => {
+      const dataFile = div.getAttribute("data-viz");
+      const title = div.getAttribute("data-title") || undefined;
+      if (dataFile) {
+        const root = createRoot(div);
+        root.render(<BitcoinGraph dataFile={dataFile} title={title} />);
+        vizRootsRef.current.push(root);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    mountVizComponents();
+    return () => {
+      vizRootsRef.current.forEach((root) => root.unmount());
+      vizRootsRef.current = [];
+    };
+  }, [postContent, mountVizComponents]);
 
   const handleSearchChange = (
     event: React.ChangeEvent<{}>,
@@ -71,7 +102,10 @@ const BlogSearch: React.FC = () => {
           />
         )}
       />
-      <div dangerouslySetInnerHTML={{ __html: postContent }} />
+      <div
+        ref={contentRef}
+        dangerouslySetInnerHTML={{ __html: postContent }}
+      />
     </div>
   );
 };
